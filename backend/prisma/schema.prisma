@@ -1,0 +1,176 @@
+// Sharma Furniture House - Database Schema
+// Run `npx prisma migrate dev --name init` after configuring DATABASE_URL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  EDITOR
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  CLOSED
+}
+
+enum ProjectCategory {
+  HOME
+  VILLA
+  APARTMENT
+  HOSTEL
+  HOTEL
+  RESTAURANT
+  CAFE
+  SCHOOL
+  COLLEGE
+  COACHING_INSTITUTE
+  HOSPITAL
+  CLINIC
+  OFFICE
+  CORPORATE
+  SHOP
+  SHOWROOM
+  COMMERCIAL
+  OTHER
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(EDITOR)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  materials   String?
+  finish      String?
+  features    String[] @default([])
+  coverImage  String?
+  images      String[] @default([])
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model Project {
+  id             String          @id @default(cuid())
+  title          String
+  slug           String          @unique
+  description    String          @db.Text
+  category       ProjectCategory
+  location       String?
+  completionDate DateTime?
+  coverImage     String?
+  isFeatured     Boolean         @default(false)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  images         ProjectImage[]
+
+  @@index([category])
+  @@index([isFeatured])
+  @@index([slug])
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  url       String
+  publicId  String?
+  caption   String?
+  sortOrder Int      @default(0)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+model GalleryImage {
+  id         String   @id @default(cuid())
+  url        String
+  publicId   String?
+  caption    String?
+  altText    String?
+  category   String?
+  isFeatured Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@index([isFeatured])
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  clientName String
+  location   String?
+  projectType String?
+  message    String   @db.Text
+  rating     Int      @default(5)
+  avatarUrl  String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model Inquiry {
+  id                String        @id @default(cuid())
+  name              String
+  phone             String
+  email             String?
+  city              String?
+  projectType       String?
+  furnitureRequired String?
+  message           String        @db.Text
+  status            InquiryStatus @default(NEW)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String   @db.Text
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @db.Text
+
+  @@index([key])
+}
