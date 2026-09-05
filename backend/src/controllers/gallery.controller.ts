@@ -49,18 +49,22 @@ export const listGalleryImages = asyncHandler(async (req: Request, res: Response
 
 // POST /api/gallery/upload  —  multipart/form-data
 // Atomic endpoint: Multer + Cloudinary upload runs first, then Prisma creates DB record
-export const uploadGalleryImage = asyncHandler(async (req: Request, res: Response) => {
-  const file = req.file as (Express.Multer.File & { path?: string; filename?: string }) | undefined;
+import { uploadToCloudinary } from "../lib/cloudinary";
 
-  if (!file) {
+export const uploadGalleryImage = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file || !req.file.buffer) {
     throw new ApiError(400, "No image file provided. Please upload an image file using field name 'image'.");
   }
 
-  const cloudinaryUrl = file.path;
-  const publicId = file.filename;
+  let cloudinaryUrl;
+  let publicId;
 
-  if (!cloudinaryUrl) {
-    throw new ApiError(500, "Cloudinary upload failed. Check server Cloudinary credentials.");
+  try {
+    const result = await uploadToCloudinary(req.file.buffer, "sharma-furniture-house/gallery");
+    cloudinaryUrl = result.secure_url;
+    publicId = result.public_id;
+  } catch (error: any) {
+    throw new ApiError(500, `Cloudinary upload failed: ${error.message}`);
   }
 
   const title = cleanString(req.body.title as string | undefined);

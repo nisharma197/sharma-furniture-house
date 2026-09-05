@@ -3,19 +3,25 @@ import prisma from "../lib/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../middleware/errorHandler";
 
-// Handles a single image upload via multer + Cloudinary storage engine.
-// Route wires: uploadSingle.single("image") middleware runs before this.
-export const uploadImage = asyncHandler(async (req: Request, res: Response) => {
-  const file = req.file as Express.Multer.File & { path?: string; filename?: string };
-  if (!file) throw new ApiError(400, "No image file provided");
+import { uploadToCloudinary } from "../lib/cloudinary";
 
-  res.status(201).json({
-    success: true,
-    data: {
-      url: file.path, // Cloudinary secure URL
-      publicId: file.filename,
-    },
-  });
+// Handles a single image upload via multer (memory storage).
+// Route wires: upload.single("image") middleware runs before this.
+export const uploadImage = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file || !req.file.buffer) throw new ApiError(400, "No image file provided");
+
+  try {
+    const result = await uploadToCloudinary(req.file.buffer, "sharma-furniture-house/general");
+    res.status(201).json({
+      success: true,
+      data: {
+        url: result.secure_url,
+        publicId: result.public_id,
+      },
+    });
+  } catch (error: any) {
+    throw new ApiError(500, `Image upload failed: ${error.message}`);
+  }
 });
 
 export const dashboardStats = asyncHandler(async (_req: Request, res: Response) => {

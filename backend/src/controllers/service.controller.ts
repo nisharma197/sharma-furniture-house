@@ -56,19 +56,21 @@ export const deleteService = asyncHandler(async (req: Request, res: Response) =>
   res.json({ success: true, message: "Service deleted" });
 });
 
+import { uploadToCloudinary } from "../lib/cloudinary";
+
 export const uploadServiceCoverImage = asyncHandler(async (req: Request, res: Response) => {
-  const file = req.file as (Express.Multer.File & { path?: string; filename?: string }) | undefined;
-  if (!file || !file.path) throw new ApiError(400, "No image file provided");
+  if (!req.file || !req.file.buffer) throw new ApiError(400, "No image file provided");
 
   try {
+    const result = await uploadToCloudinary(req.file.buffer, "sharma-furniture-house/services");
     const service = await prisma.service.update({
       where: { id: req.params.id },
-      data: { coverImage: file.path },
+      data: { coverImage: result.secure_url },
     });
-    res.json({ success: true, data: { url: file.path, publicId: file.filename, service } });
+    res.json({ success: true, data: { url: result.secure_url, publicId: result.public_id, service } });
   } catch (err: any) {
     if (err.code === "P2025") throw new ApiError(404, "Service not found");
-    throw err;
+    throw new ApiError(500, `Cloudinary upload failed: ${err.message}`);
   }
 });
 

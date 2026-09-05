@@ -101,26 +101,27 @@ export const deleteProject = asyncHandler(async (req: Request, res: Response) =>
 });
 
 // Upload cover image for a project (multipart/form-data)
+import { uploadToCloudinary } from "../lib/cloudinary";
+
 export const uploadProjectCoverImage = asyncHandler(async (req: Request, res: Response) => {
-  const file = req.file as (Express.Multer.File & { path?: string; filename?: string }) | undefined;
-  if (!file || !file.path) throw new ApiError(400, "No image file provided");
+  if (!req.file || !req.file.buffer) throw new ApiError(400, "No image file provided");
 
   try {
+    const result = await uploadToCloudinary(req.file.buffer, "sharma-furniture-house/projects");
     const project = await prisma.project.update({
       where: { id: req.params.id },
-      data: { coverImage: file.path },
+      data: { coverImage: result.secure_url },
     });
-    res.json({ success: true, data: { url: file.path, publicId: file.filename, project } });
+    res.json({ success: true, data: { url: result.secure_url, publicId: result.public_id, project } });
   } catch (err: any) {
     if (err.code === "P2025") throw new ApiError(404, "Project not found");
-    throw err;
+    throw new ApiError(500, `Cloudinary upload failed: ${err.message}`);
   }
 });
 
 // Add image to a project's gallery
 export const addProjectImage = asyncHandler(async (req: Request, res: Response) => {
-  const file = req.file as (Express.Multer.File & { path?: string; filename?: string }) | undefined;
-  if (!file || !file.path) throw new ApiError(400, "No image file provided");
+  if (!req.file || !req.file.buffer) throw new ApiError(400, "No image file provided");
 
   // Verify project exists
   const project = await prisma.project.findUnique({ where: { id: req.params.id } });
@@ -129,17 +130,21 @@ export const addProjectImage = asyncHandler(async (req: Request, res: Response) 
   const caption = (req.body.caption as string | undefined)?.trim() || null;
   const sortOrder = req.body.sortOrder ? parseInt(req.body.sortOrder as string, 10) : 0;
 
-  const image = await prisma.projectImage.create({
-    data: {
-      projectId: req.params.id,
-      url: file.path,
-      publicId: file.filename || null,
-      caption,
-      sortOrder,
-    },
-  });
-
-  res.status(201).json({ success: true, data: image });
+  try {
+    const result = await uploadToCloudinary(req.file.buffer, "sharma-furniture-house/projects");
+    const image = await prisma.projectImage.create({
+      data: {
+        projectId: req.params.id,
+        url: result.secure_url,
+        publicId: result.public_id,
+        caption,
+        sortOrder,
+      },
+    });
+    res.status(201).json({ success: true, data: image });
+  } catch (err: any) {
+    throw new ApiError(500, `Image upload failed: ${err.message}`);
+  }
 });
 
 // Delete a project image
