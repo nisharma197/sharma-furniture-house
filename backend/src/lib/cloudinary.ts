@@ -47,7 +47,7 @@ export function uploadToCloudinary(
       }
     );
 
-    stream.end(buffer);
+    (stream as any).end(buffer);
   });
 }
 
