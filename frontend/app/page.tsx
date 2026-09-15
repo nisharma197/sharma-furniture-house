@@ -10,12 +10,13 @@ import { api } from "@/lib/api";
 import type { Paginated, Service, Project, Testimonial, FaqItem, GalleryImage } from "@/lib/types";
 
 async function getHomeData() {
-  const [services, projects, gallery, testimonials, faqs] = await Promise.all([
+  const [services, projects, gallery, testimonials, faqs, settingsRes] = await Promise.all([
     api.get<Paginated<Service>>("/services?limit=6", { cache: "no-store" }).catch(() => null),
     api.get<Paginated<Project>>("/projects?featured=true&limit=6", { cache: "no-store" }).catch(() => null),
     api.get<Paginated<GalleryImage>>("/gallery?featured=true&limit=6", { cache: "no-store" }).catch(() => null),
     api.get<Paginated<Testimonial>>("/testimonials?limit=6", { cache: "no-store" }).catch(() => null),
     api.get<{ success: boolean; data: FaqItem[] }>("/faqs", { cache: "no-store" }).catch(() => null),
+    api.get<{ success: boolean; data: Record<string, string> }>("/settings", { cache: "no-store" }).catch(() => null),
   ]);
 
   // Fallback: if no featured gallery images yet, get latest gallery images
@@ -33,6 +34,7 @@ async function getHomeData() {
     galleryImages,
     testimonials: testimonials?.data || [],
     faqs: (faqs?.data || []).slice(0, 5),
+    settings: settingsRes?.data || {},
   };
 }
 
@@ -48,7 +50,14 @@ const industries = [
 ];
 
 export default async function HomePage() {
-  const { services, projects, galleryImages, testimonials, faqs } = await getHomeData();
+  const { services, projects, galleryImages, testimonials, faqs, settings } = await getHomeData();
+
+  const businessName = settings.businessName || "Sharma Furniture House";
+  const ownerName = settings.ownerName || "Mr. Dhananjay Sharma";
+  const experience = settings.experience || "30+ Years";
+  const address = settings.address || "203 Nandbag Colony, Near Marimata, Indore, Madhya Pradesh, India";
+  const whatsapp = settings.whatsapp || "919876543210";
+  const aboutDescription = settings.aboutDescription || "";
 
   return (
     <>
@@ -59,12 +68,12 @@ export default async function HomePage() {
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
             <SectionHeading
-              eyebrow="About Sharma Furniture House"
+              eyebrow={`About ${businessName}`}
               title="A craftsman's workshop, not a showroom."
-              description="We don't sell off-the-shelf furniture. Every piece we build starts with a conversation about your space, your measurements, and how you actually live or work — then it's designed and hand-built to match."
+              description={aboutDescription || "We don't sell off-the-shelf furniture. Every piece we build starts with a conversation about your space, your measurements, and how you actually live or work — then it's designed and hand-built to match."}
             />
             <p className="mt-4 text-walnut-700 leading-relaxed max-w-xl">
-              Led by Mr. Dhananjay Sharma, who brings more than 30 years of hands-on carpentry and furniture
+              Led by {ownerName}, who brings more than {experience.toLowerCase().replace('years', '').trim()} years of hands-on carpentry and furniture
               manufacturing experience, our team handles everything from a single custom wardrobe to complete
               interior woodwork for residential, commercial, and institutional clients in Indore and beyond.
             </p>
@@ -76,7 +85,7 @@ export default async function HomePage() {
                 Read Our Story &rarr;
               </Link>
               <div className="border-l border-walnut-200 pl-4 text-xs text-walnut-600">
-                <span className="font-semibold text-walnut-900 block">30+ Years Experience</span>
+                <span className="font-semibold text-walnut-900 block">{experience} Experience</span>
                 Client-Based Custom Projects Only
               </div>
             </div>
@@ -91,8 +100,8 @@ export default async function HomePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-walnut-900/70 via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 text-linen">
-              <p className="font-display text-sm font-semibold">Mr. Dhananjay Sharma</p>
-              <p className="text-xs text-walnut-100/80">Master Craftsman & Founder &middot; 203 Nandbag Colony, Indore</p>
+              <p className="font-display text-sm font-semibold">{ownerName}</p>
+              <p className="text-xs text-walnut-100/80">Master Craftsman & Founder &middot; {address.split(',')[0]}, {address.split(',').slice(-2, -1)[0]?.trim() || 'Indore'}</p>
             </div>
           </div>
         </div>
@@ -188,9 +197,9 @@ export default async function HomePage() {
           <SectionHeading eyebrow="Our Process" title="How We Work With Clients" align="center" />
           <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { step: "01", title: "Share Requirements", desc: "Call or send your room measurements, sketches, or reference photos to Dhananjay Sharma." },
+              { step: "01", title: "Share Requirements", desc: `Call or send your room measurements, sketches, or reference photos to ${ownerName}.` },
               { step: "02", title: "Site Visit & Quote", desc: "We visit your site in Indore to take exact measurements, select wood/laminates, and provide a clear quote." },
-              { step: "03", title: "Precision Workshop Build", desc: "Your custom furniture is precision built in our workshop using 30+ years of carpentry expertise." },
+              { step: "03", title: "Precision Workshop Build", desc: `Your custom furniture is precision built in our workshop using ${experience.toLowerCase()} of carpentry expertise.` },
               { step: "04", title: "Delivery & Installation", desc: "We deliver and install everything cleanly at your site, built to last for generations." },
             ].map((s) => (
               <div key={s.step} className="rounded-sm border border-walnut-700/50 bg-walnut-800/50 p-6">
@@ -246,17 +255,17 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Visit or Call Us"
             title="Ready to build something custom?"
-            description="Get in touch with your requirements — sketches, photos, or just an idea — and Mr. Dhananjay Sharma will personally advise you."
+            description={`Get in touch with your requirements — sketches, photos, or just an idea — and ${ownerName} will personally advise you.`}
             align="center"
           />
           <div className="mt-8 grid gap-6 sm:grid-cols-2 text-left bg-white/80 border border-walnut-100 p-6 rounded-sm max-w-2xl mx-auto shadow-sm">
             <div className="space-y-1 text-sm text-walnut-800">
               <p className="font-semibold text-walnut-900">📍 Business Location:</p>
-              <p>203 Nandbag Colony, Near Marimata, Indore, Madhya Pradesh, India</p>
+              <p>{address}</p>
             </div>
             <div className="space-y-1 text-sm text-walnut-800">
               <p className="font-semibold text-walnut-900">👤 Owner & Master Carpenter:</p>
-              <p>Mr. Dhananjay Sharma (30+ Years Experience)</p>
+              <p>{ownerName} ({experience} Experience)</p>
             </div>
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
@@ -267,7 +276,7 @@ export default async function HomePage() {
               Request a Free Consultation
             </Link>
             <a
-              href="https://wa.me/919876543210"
+              href={`https://wa.me/${whatsapp}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-sm border border-walnut-300 bg-white px-8 py-3.5 font-medium text-walnut-900 hover:border-brass-500 hover:text-brass-600 transition-colors focus-ring shadow-sm"

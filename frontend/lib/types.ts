@@ -102,10 +102,14 @@ export interface ApiResponse<T> {
 export interface SiteSettings {
   businessName?: string;
   ownerName?: string;
+  experience?: string;
   phone?: string;
   whatsapp?: string;
   email?: string;
   address?: string;
+  businessHours?: string;
+  tagline?: string;
+  aboutDescription?: string;
   mapEmbedUrl?: string;
   heroImageUrl?: string;
   aboutImageUrl?: string;

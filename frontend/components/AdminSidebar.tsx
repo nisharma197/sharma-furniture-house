@@ -12,6 +12,7 @@ const links = [
   { href: "/admin/dashboard/gallery", label: "Gallery" },
   { href: "/admin/dashboard/testimonials", label: "Testimonials" },
   { href: "/admin/dashboard/faqs", label: "FAQs" },
+  { href: "/admin/dashboard/settings", label: "Settings" },
 ];
 
 export default function AdminSidebar() {

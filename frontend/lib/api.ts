@@ -165,3 +165,6 @@ export const createInquiry = (data: unknown) =>
 // ─── Settings ───────────────────────────────────────────────────────────────
 export const getSettings = () =>
   api.get<{ success: boolean; data: Record<string, string> }>("/settings");
+
+export const updateSettings = (data: Record<string, string>) =>
+  api.put<{ success: boolean; message: string }>("/settings", data);

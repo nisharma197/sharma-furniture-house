@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
+import { api } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -9,7 +10,23 @@ export const metadata: Metadata = {
     "Meet Mr. Dhananjay Sharma, owner of Sharma Furniture House, with 30+ years of carpentry and custom furniture manufacturing experience in Indore.",
 };
 
-export default function AboutPage() {
+async function getAboutSettings() {
+  try {
+    const res = await api.get<{ success: boolean; data: Record<string, string> }>("/settings", { cache: "no-store" });
+    return res?.data || {};
+  } catch {
+    return {};
+  }
+}
+
+export default async function AboutPage() {
+  const settings = await getAboutSettings();
+
+  const businessName = settings.businessName || "Sharma Furniture House";
+  const ownerName = settings.ownerName || "Mr. Dhananjay Sharma";
+  const experience = settings.experience || "30+ Years";
+  const address = settings.address || "203 Nandbag Colony, Near Marimata, Indore, M.P.";
+
   return (
     <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
       <SectionHeading eyebrow="About Us" title="Three decades of building things that last." />
@@ -17,13 +34,13 @@ export default function AboutPage() {
       <div className="mt-10 grid gap-12 lg:grid-cols-12 items-start">
         <div className="lg:col-span-7 space-y-6 text-walnut-700 leading-relaxed text-base">
           <p>
-            Sharma Furniture House was built on a simple principle: furniture should fit the people and the space it&apos;s
+            {businessName} was built on a simple principle: furniture should fit the people and the space it&apos;s
             made for — not the other way around. We are <strong className="text-walnut-900">NOT a showroom</strong> and we don&apos;t sell ready-made pieces off a
             shelf. Every single order starts with a conversation about your measurements, space requirements, and design preferences.
           </p>
           <p>
-            The business is personally led by <strong className="text-walnut-900">Mr. Dhananjay Sharma</strong>, who has spent
-            more than 30 years working as a hands-on master carpenter and furniture manufacturer in Indore, Madhya Pradesh. Over three decades, he has
+            The business is personally led by <strong className="text-walnut-900">{ownerName}</strong>, who has spent
+            more than {experience.toLowerCase().replace('years', '').trim()} years working as a hands-on master carpenter and furniture manufacturer in Indore, Madhya Pradesh. Over three decades, he has
             designed and crafted everything from individual handcrafted wardrobes for homes to full turnkey interior woodwork for hotels,
             hospitals, schools, colleges, hostels, and corporate offices.
           </p>
@@ -31,7 +48,7 @@ export default function AboutPage() {
           <div className="relative aspect-video rounded-sm overflow-hidden border border-walnut-100 shadow-md my-6">
             <Image
               src="https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=1200&q=80"
-              alt="Mr. Dhananjay Sharma workshop craftsmanship"
+              alt={`${ownerName} workshop craftsmanship`}
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 60vw"
@@ -47,7 +64,7 @@ export default function AboutPage() {
             and construct with precision mortise-and-tenon joinery and finishes that withstand daily use for decades.
           </p>
           <p>
-            Today, Sharma Furniture House handles both residential and commercial projects across Indore
+            Today, {businessName} handles both residential and commercial projects across Indore
             and Madhya Pradesh — modular wardrobes, hydraulic storage beds, sofa sets, modular kitchens, office workstations, wooden partitions,
             and complete custom carpentry based on your drawings or reference photos.
           </p>
@@ -57,7 +74,7 @@ export default function AboutPage() {
               href="/contact"
               className="inline-block rounded-sm bg-walnut-900 px-7 py-3.5 text-sm font-medium text-linen hover:bg-brass-600 transition-colors focus-ring"
             >
-              Consult With Mr. Dhananjay Sharma &rarr;
+              Consult With {ownerName} &rarr;
             </Link>
           </div>
         </div>
@@ -77,7 +94,7 @@ export default function AboutPage() {
                 Craftsman Guarantee
               </span>
               <p className="mt-2 text-sm font-medium text-linen">
-                Direct client interaction with Mr. Dhananjay Sharma &mdash; No middlemen, no catalog markups.
+                Direct client interaction with {ownerName} &mdash; No middlemen, no catalog markups.
               </p>
             </div>
           </div>
@@ -87,15 +104,15 @@ export default function AboutPage() {
             <dl className="mt-4 space-y-4 text-sm">
               <div>
                 <dt className="text-walnut-500 text-xs uppercase tracking-wider">Owner & Master Carpenter</dt>
-                <dd className="font-semibold text-walnut-900 text-base">Mr. Dhananjay Sharma</dd>
+                <dd className="font-semibold text-walnut-900 text-base">{ownerName}</dd>
               </div>
               <div>
                 <dt className="text-walnut-500 text-xs uppercase tracking-wider">Experience</dt>
-                <dd className="font-semibold text-brass-600 text-base">30+ Years Active Experience</dd>
+                <dd className="font-semibold text-brass-600 text-base">{experience} Active Experience</dd>
               </div>
               <div>
                 <dt className="text-walnut-500 text-xs uppercase tracking-wider">Business Location</dt>
-                <dd className="font-medium text-walnut-900">203 Nandbag Colony, Near Marimata, Indore, M.P.</dd>
+                <dd className="font-medium text-walnut-900">{address}</dd>
               </div>
               <div>
                 <dt className="text-walnut-500 text-xs uppercase tracking-wider">Specialization</dt>

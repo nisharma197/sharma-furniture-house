@@ -1,20 +1,40 @@
 import Link from "next/link";
+import { api } from "@/lib/api";
 
-export default function Footer() {
-  const phone = process.env.NEXT_PUBLIC_PHONE || "+91-XXXXXXXXXX";
-  const email = process.env.NEXT_PUBLIC_EMAIL || "info@sharmafurniturehouse.com";
+async function getFooterSettings() {
+  try {
+    const res = await api.get<{ success: boolean; data: Record<string, string> }>("/settings", {
+      next: { revalidate: 60 },
+    });
+    return res?.data || {};
+  } catch {
+    return {};
+  }
+}
+
+export default async function Footer() {
+  const settings = await getFooterSettings();
+
+  const businessName = settings.businessName || "Sharma Furniture House";
+  const ownerName = settings.ownerName || "Mr. Dhananjay Sharma";
+  const phone = settings.phone || process.env.NEXT_PUBLIC_PHONE || "+91-XXXXXXXXXX";
+  const email = settings.email || process.env.NEXT_PUBLIC_EMAIL || "info@sharmafurniturehouse.com";
   const address =
-    process.env.NEXT_PUBLIC_ADDRESS || "203 Nandbag Colony, Near Marimata, Indore, Madhya Pradesh, India";
+    settings.address ||
+    process.env.NEXT_PUBLIC_ADDRESS ||
+    "203 Nandbag Colony, Near Marimata, Indore, Madhya Pradesh, India";
+  const aboutDescription =
+    settings.aboutDescription ||
+    "30+ years of custom carpentry and furniture manufacturing, built to order for homes and businesses across Indore.";
 
   return (
     <footer className="bg-walnut-900 text-linen">
       <div className="joinery-divider" />
       <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8 grid gap-10 md:grid-cols-4">
         <div>
-          <p className="font-display text-lg font-semibold">Sharma Furniture House</p>
+          <p className="font-display text-lg font-semibold">{businessName}</p>
           <p className="mt-3 text-sm text-walnut-100/80 leading-relaxed">
-            30+ years of custom carpentry and furniture manufacturing, built to order for homes and businesses across
-            Indore.
+            {aboutDescription}
           </p>
         </div>
 
@@ -49,8 +69,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-walnut-700 py-5 text-center text-xs text-walnut-100/60">
-        &copy; {new Date().getFullYear()} Sharma Furniture House. All rights reserved. &middot; Owner: Mr. Dhananjay
-        Sharma
+        &copy; {new Date().getFullYear()} {businessName}. All rights reserved. &middot; Owner: {ownerName}
       </div>
     </footer>
   );

@@ -1,5 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { getSettings } from "@/lib/api";
+
 export default function WhatsappButton() {
-  const number = process.env.NEXT_PUBLIC_WHATSAPP || "91XXXXXXXXXX";
+  const [number, setNumber] = useState(process.env.NEXT_PUBLIC_WHATSAPP || "91XXXXXXXXXX");
+
+  useEffect(() => {
+    let cancelled = false;
+    getSettings()
+      .then((res) => {
+        if (!cancelled && res?.data?.whatsapp) {
+          setNumber(res.data.whatsapp);
+        }
+      })
+      .catch(() => {
+        // Silently fall back to env/default
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const message = encodeURIComponent("Hi, I'd like to enquire about custom furniture / carpentry work.");
 
   return (
